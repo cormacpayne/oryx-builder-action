@@ -61,10 +61,6 @@ runs:
         username: ${{ inputs.REGISTRY_USERNAME }}
         password: ${{ inputs.REGISTRY_PASSWORD }}
     
-    - name: Temp step
-      shell: bash
-      run: ls ${{ inputs.sourcePath }}
-    
     - name: Set Oryx++ Builder as default builder
       shell: bash
       run: pack config default-builder cormtestacr.azurecr.io/builder:latest
