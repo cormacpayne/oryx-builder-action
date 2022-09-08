@@ -61,6 +61,10 @@ runs:
         username: ${{ inputs.REGISTRY_USERNAME }}
         password: ${{ inputs.REGISTRY_PASSWORD }}
     
+    - name: Set Oryx++ Builder as default builder
+      shell: bash
+      run: pack config default-builder cormtestacr.azurecr.io/builder:latest
+    
     - name: Create runnable application image
       shell: bash
       run: >
