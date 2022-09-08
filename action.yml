@@ -39,10 +39,10 @@ outputs:
     value: ${{ steps.id.outputs.property }}
 
 runs:
-  - env:
-      REGISTRY_URL: ${{ inputs.REGISTRY_NAME }}.azurecr.io
-      FULL_IMAGE_NAME: ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:latest
-      CONTAINER_APP_NAME: oryx-builder-${{ github.run_id }}-${{ github.run_attempt }}
+  env:
+    REGISTRY_URL: ${{ inputs.REGISTRY_NAME }}.azurecr.io
+    FULL_IMAGE_NAME: ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:latest
+    CONTAINER_APP_NAME: oryx-builder-${{ github.run_id }}-${{ github.run_attempt }}
   using: "composite"
   steps:
     - name: Install pack CLI
