@@ -69,5 +69,4 @@ runs:
     
     - name: Create or update Azure Container App
       shell: bash
-      run: az containerapp up --name oryx-builder-${{ github.run_id }}-${{ github.run_attempt }} --resource-group oryx-builder-rg --image ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}-${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.REGISTRY_NAME }}.azurecr.io --registry-username ${{ inputs.REGISTRY_USERNAME }}
-                           --registry-password ${{ inputs.REGISTRY_PASSWORD }}
+      run: az containerapp up --name oryx-builder-${{ github.run_id }}-${{ github.run_attempt }} --resource-group oryx-builder-rg --image ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}-${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.REGISTRY_NAME }}.azurecr.io --registry-username ${{ inputs.REGISTRY_USERNAME }} --registry-password ${{ inputs.REGISTRY_PASSWORD }}
