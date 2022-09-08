@@ -2,7 +2,7 @@ name: 'Oryx++ Builder GitHub Action'
 description: 'Uses the Oryx++ Builder to build a runnable image for an application and deploy it to an Azure Container App'
 
 inputs:
-  sourcePath:
+  appSourcePath:
     description: 'Path to the source of the application to be built in GitHub Actions'
     required: true
   AZURE_CREDENTIALS:
@@ -17,6 +17,10 @@ inputs:
   REGISTRY_PASSWORD:
     description: 'Password used to authenticate push to Azure Container Registry'
     required: true
+  containerAppName:
+    description: 'The name of the Azure Container App that will be created or updated. By default, this value is oryx-builder-<random-string>.'
+    required: false
+    default: 'oryx-builder-${{ github.run_id }}-${{ github.run_attempt }}'
   resourceGroup:
     description: 'The resource group that the Azure Container App will be created in. By default, this value is oryx-builder-rg'
     required: false
@@ -65,7 +69,7 @@ runs:
     
     - name: Create runnable application image
       shell: bash
-      run: pack build ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --path ${{ inputs.sourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ inputs.runtimeName }}:${{ inputs.runtimeVersion }}
+      run: pack build ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --path ${{ inputs.appSourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ inputs.runtimeName }}:${{ inputs.runtimeVersion }}
 
     - name: Push image to Azure Container Registry
       shell: bash
@@ -73,4 +77,4 @@ runs:
     
     - name: Create or update Azure Container App
       shell: bash
-      run: az containerapp up --name oryx-builder-${{ github.run_id }}-${{ github.run_attempt }} --resource-group ${{ inputs.resourceGroup }} --image ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.REGISTRY_NAME }}.azurecr.io --registry-username ${{ inputs.REGISTRY_USERNAME }} --registry-password ${{ inputs.REGISTRY_PASSWORD }}
+      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ inputs.resourceGroup }} --image ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.REGISTRY_NAME }}.azurecr.io --registry-username ${{ inputs.REGISTRY_USERNAME }} --registry-password ${{ inputs.REGISTRY_PASSWORD }}
