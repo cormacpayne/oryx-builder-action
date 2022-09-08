@@ -50,12 +50,15 @@ runs:
         REGISTRY_URL: ${{ inputs.REGISTRY_NAME }}.azurecr.io
         FULL_IMAGE_NAME: ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:latest
         CONTAINER_APP_NAME: oryx-builder-${{ github.run_id }}-${{ github.run_attempt }}
+      shell: bash
   
     - name: Install pack CLI
       run: (curl -sSL "https://github.com/buildpacks/pack/releases/download/v0.27.0/pack-v0.27.0-linux.tgz" | sudo tar -C /usr/local/bin/ --no-same-owner -xzv pack)
+      shell: bash
     
     - name: Install containerapp extension for Azure CLI:
       run: az extension add --name containerapp
+      shell: bash
 
     - name: Log in to Azure
       uses: azure/login@v1
@@ -71,9 +74,11 @@ runs:
     
     - name: Create runnable application image
       run: pack build ${{ env.FULL_IMAGE_NAME }} --path ${{ inputs.sourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ inputs.runtimeName }}:${{ inputs.runtimeVersion }}
+      shell: bash
 
     - name: Push image to Azure Container Registry
       run: docker push ${{ env.FULL_IMAGE_NAME }}
+      shell: bash
     
     - name: Create or update Azure Container App
       run: |
@@ -84,3 +89,4 @@ runs:
                            --registry-server ${{ env.REGISTRY_URL }} \
                            --registry-username ${{ inputs.REGISTRY_USERNAME }} \
                            --registry-password ${{ inputs.REGISTRY_PASSWORD }}
+      shell: bash
