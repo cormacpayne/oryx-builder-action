@@ -1,0 +1,81 @@
+name: 'Oryx++ Builder GitHub Action'
+description: 'Uses the Oryx++ Builder to build a runnable image for an application and deploy it to an Azure Container App'
+
+inputs:
+  sourcePath:
+    description: 'Path to the source of the application to be built in GitHub Actions'
+    required: true
+  AZURE_CREDENTIALS:
+    description: 'Azure credentials retrieved from the azure/login GitHub Action used to authenticate Azure CLI requests'
+    required: true
+  REGISTRY_NAME:
+    description: 'Name of that Azure Contrainer Registry that the built image will be pushed to'
+    required: true
+  REGISTRY_USERNAME:
+    description: 'Username used to authenticate push to Azure Container Registry'
+    required: true
+  REGISTRY_PASSWORD:
+    description: 'Password used to authenticate push to Azure Container Registry'
+    required: true
+  runtimeName:
+    description: 'The name of the runtime stack to use when running your application. By default, this action will use 
+      Oryx to determine the runtime stack for the image. Please view the following document for more information on the 
+      supported runtime stacks for Oryx: https://github.com/microsoft/Oryx/blob/main/doc/supportedRuntimeVersions.md'
+    required: false
+  runtimeVersion:
+    description: 'The version of the runtime stack to use when running your application. By default, this action will 
+    use Oryx to determine the runtime stack for the image. Please view the following document for more information on 
+    the supported runtime stacks for Oryx: https://github.com/microsoft/Oryx/blob/main/doc/supportedRuntimeVersions.md'
+    required: false
+  targetPort:
+    description: 'The designated port for the application to run on. By default, this value is 8080.'
+    required: false
+    default: '8080'
+
+
+outputs:
+  foo:
+    description: 'foo output'
+    value: ${{ steps.id.outputs.property }}
+
+runs:
+  using: "composite"
+  steps:
+    - env:
+        REGISTRY_URL: ${{ inputs.REGISTRY_NAME }}.azurecr.io
+        FULL_IMAGE_NAME: ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:latest
+        CONTAINER_APP_NAME: oryx-builder-${{ github.run_id }}-${{ github.run_attempt }}
+
+    - name: Install pack CLI
+      run: (curl -sSL "https://github.com/buildpacks/pack/releases/download/v0.27.0/pack-v0.27.0-linux.tgz" | sudo tar -C /usr/local/bin/ --no-same-owner -xzv pack)
+    
+    - name: Install containerapp extension for Azure CLI:
+      run: az extension add --name containerapp
+
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ inputs.AZURE_CREDENTIALS }}
+    
+    - name: Log in to Azure Container Registry
+      uses: docker/login-action@v2.0.0
+      with:
+        registry: ${{ env.REGISTRY_URL }}
+        username: ${{ inputs.REGISTRY_USERNAME }}
+        password: ${{ inputs.REGISTRY_PASSWORD }}
+    
+    - name: Create runnable application image
+      run: pack build ${{ env.FULL_IMAGE_NAME }} --path ${{ inputs.sourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ inputs.runtimeName }}:${{ inputs.runtimeVersion }}
+
+    - name: Push image to Azure Container Registry
+      run: docker push ${{ env.FULL_IMAGE_NAME }}
+    
+    - name: Create or update Azure Container App
+      run: |
+        az containerapp up --name ${{ env.CONTAINER_APP_NAME }} \
+                           --resource-group oryx-builder-rg \
+                           --image ${{ env.FULL_IMAGE_NAME }} \
+                           --target-port ${{ inputs.targetPort }} \
+                           --registry-server ${{ env.REGISTRY_URL }} \
+                           --registry-username ${{ inputs.REGISTRY_USERNAME }} \
+                           --registry-password ${{ inputs.REGISTRY_PASSWORD }}
