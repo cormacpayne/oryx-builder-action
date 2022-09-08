@@ -39,13 +39,12 @@ outputs:
     value: ${{ steps.id.outputs.property }}
 
 runs:
+  - env:
+      REGISTRY_URL: ${{ inputs.REGISTRY_NAME }}.azurecr.io
+      FULL_IMAGE_NAME: ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:latest
+      CONTAINER_APP_NAME: oryx-builder-${{ github.run_id }}-${{ github.run_attempt }}
   using: "composite"
   steps:
-    - env:
-        REGISTRY_URL: ${{ inputs.REGISTRY_NAME }}.azurecr.io
-        FULL_IMAGE_NAME: ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:latest
-        CONTAINER_APP_NAME: oryx-builder-${{ github.run_id }}-${{ github.run_attempt }}
-
     - name: Install pack CLI
       run: (curl -sSL "https://github.com/buildpacks/pack/releases/download/v0.27.0/pack-v0.27.0-linux.tgz" | sudo tar -C /usr/local/bin/ --no-same-owner -xzv pack)
     
