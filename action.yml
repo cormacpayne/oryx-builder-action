@@ -17,6 +17,10 @@ inputs:
   REGISTRY_PASSWORD:
     description: 'Password used to authenticate push to Azure Container Registry'
     required: true
+  resourceGroup:
+    description: 'The resource group that the Azure Container App will be created in. By default, this value is oryx-builder-rg'
+    required: false
+    default: 'oryx-builder-rg'
   runtimeName:
     description: 'The name of the runtime stack to use when running your application. By default, this action will use 
       Oryx to determine the runtime stack for the image. Please view the following document for more information on the 
@@ -69,4 +73,4 @@ runs:
     
     - name: Create or update Azure Container App
       shell: bash
-      run: az containerapp up --name oryx-builder-${{ github.run_id }}.${{ github.run_attempt }} --resource-group oryx-builder-rg --image ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.REGISTRY_NAME }}.azurecr.io --registry-username ${{ inputs.REGISTRY_USERNAME }} --registry-password ${{ inputs.REGISTRY_PASSWORD }}
+      run: az containerapp up --name oryx-builder-${{ github.run_id }}.${{ github.run_attempt }} --resource-group ${{ inputs.resourceGroup }} --image ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.REGISTRY_NAME }}.azurecr.io --registry-username ${{ inputs.REGISTRY_USERNAME }} --registry-password ${{ inputs.REGISTRY_PASSWORD }}
