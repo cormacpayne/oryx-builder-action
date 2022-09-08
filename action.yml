@@ -56,7 +56,7 @@ runs:
       run: (curl -sSL "https://github.com/buildpacks/pack/releases/download/v0.27.0/pack-v0.27.0-linux.tgz" | sudo tar -C /usr/local/bin/ --no-same-owner -xzv pack)
       shell: bash
     
-    - name: Install containerapp extension for Azure CLI:
+    - name: Install containerapp extension for Azure CLI
       run: az extension add --name containerapp
       shell: bash
 
