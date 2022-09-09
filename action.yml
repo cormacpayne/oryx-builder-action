@@ -69,7 +69,11 @@ runs:
     
     - name: Create runnable application image
       shell: bash
-      run: pack build ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --path ${{ inputs.appSourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ inputs.runtimeName }}:${{ inputs.runtimeVersion }}
+      run: |
+        pack build ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} \
+          --path ${{ inputs.appSourcePath }} \
+          --builder cormtestacr.azurecr.io/builder:latest \
+          --run-image cormtestacr.azurecr.io/builder/stack/${{ inputs.runtimeName }}:${{ inputs.runtimeVersion }}
 
     - name: Push image to Azure Container Registry
       shell: bash
@@ -77,4 +81,11 @@ runs:
     
     - name: Create or update Azure Container App
       shell: bash
-      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ inputs.resourceGroup }} --image ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.REGISTRY_NAME }}.azurecr.io --registry-username ${{ inputs.REGISTRY_USERNAME }} --registry-password ${{ inputs.REGISTRY_PASSWORD }}
+      run: |
+        az containerapp up --name ${{ inputs.containerAppName }} \
+                           --resource-group ${{ inputs.resourceGroup }} \
+                           --image ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} \
+                           --target-port ${{ inputs.targetPort }} \
+                           --registry-server ${{ inputs.REGISTRY_NAME }}.azurecr.io \
+                           --registry-username ${{ inputs.REGISTRY_USERNAME }} \
+                           --registry-password ${{ inputs.REGISTRY_PASSWORD }}
