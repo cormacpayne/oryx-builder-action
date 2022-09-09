@@ -6,7 +6,7 @@ inputs:
     description: 'Path to the source of the application to be built in GitHub Actions'
     required: true
   azureCredentials:
-    description: 'Azure credentials retrieved from the azure/login GitHub Action used to authenticate Azure CLI requests'
+    description: "Azure credentials retrieved from the 'azure/login' GitHub Action used to authenticate Azure CLI requests"
     required: true
   acrName:
     description: 'Name of that Azure Contrainer Registry that the built image will be pushed to'
@@ -25,15 +25,12 @@ inputs:
     description: 'The resource group that the Azure Container App will be created in. By default, this value is oryx-builder-rg'
     required: false
     default: 'oryx-builder-rg'
-  runtimeName:
-    description: 'The name of the runtime stack to use when running your application. By default, this action will use 
-      Oryx to determine the runtime stack for the image. Please view the following document for more information on the 
-      supported runtime stacks for Oryx: https://github.com/microsoft/Oryx/blob/main/doc/supportedRuntimeVersions.md'
-    required: false
-  runtimeVersion:
-    description: 'The version of the runtime stack to use when running your application. By default, this action will 
-    use Oryx to determine the runtime stack for the image. Please view the following document for more information on 
-    the supported runtime stacks for Oryx: https://github.com/microsoft/Oryx/blob/main/doc/supportedRuntimeVersions.md'
+  runtimeStack:
+    description: |
+      "The platform version stack that the application runs in when deployed to the Azure Container App. This should
+      be provided in the format <platform>:<version>. By default, this value is determined by Oryx based on the contents of
+      the provided application. Please view the following document for more information on the supported runtime stacks for Oryx:
+      https://github.com/microsoft/Oryx/blob/main/doc/supportedRuntimeVersions.md"
     required: false
   targetPort:
     description: 'The designated port for the application to run on. By default, this value is 8080.'
@@ -63,13 +60,28 @@ runs:
         username: ${{ inputs.acrUsername }}
         password: ${{ inputs.acrPassword }}
     
+    - name: Export runtime stack to environment variable
+      shell: bash
+      run: |
+        RUNTIME_STACK="${{ inputs.runtimeStack }}"
+        echo "RUNTIME_STACK=${RUNTIME_STACK}" >> $GITHUB_ENV
+    
+    - name: Determine runtime stack
+      if: ${{ inputs.runtimeStack == '' }}
+      shell: bash
+      run: |
+        docker run --rm -v ${{ inputs.appSourcePath }}:/app cormtestacr.azurecr.io/oryx/cli:latest /bin/bash -c "oryx dockerfile /app | head -n 1 | sed 's/ARG RUNTIME=//' >> /app/oryx-runtime.txt"
+        RUNTIME_STACK=$(head -n 1 ${{ inputs.appSourcePath }}/oryx-runtime.txt)
+        echo "RUNTIME_STACK=${RUNTIME_STACK}" >> $GITHUB_ENV
+        rm ${{ inputs.appSourcePath }}/oryx-runtime.txt
+    
     - name: Set Oryx++ Builder as default builder
       shell: bash
       run: pack config default-builder cormtestacr.azurecr.io/builder:latest
     
     - name: Create runnable application image
       shell: bash
-      run: pack build ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --path ${{ inputs.appSourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ inputs.runtimeName }}:${{ inputs.runtimeVersion }}
+      run: pack build ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --path ${{ inputs.appSourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ env.RUNTIME_STACK }}
 
     - name: Push image to Azure Container Registry
       shell: bash
