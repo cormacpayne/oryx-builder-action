@@ -8,13 +8,13 @@ inputs:
   AZURE_CREDENTIALS:
     description: 'Azure credentials retrieved from the azure/login GitHub Action used to authenticate Azure CLI requests'
     required: true
-  REGISTRY_NAME:
+  ACR_NAME:
     description: 'Name of that Azure Contrainer Registry that the built image will be pushed to'
     required: true
-  REGISTRY_USERNAME:
+  ACR_USERNAME:
     description: 'Username used to authenticate push to Azure Container Registry'
     required: true
-  REGISTRY_PASSWORD:
+  ACR_PASSWORD:
     description: 'Password used to authenticate push to Azure Container Registry'
     required: true
   containerAppName:
@@ -59,9 +59,9 @@ runs:
     - name: Log in to Azure Container Registry
       uses: docker/login-action@v2.0.0
       with:
-        registry: ${{ inputs.REGISTRY_NAME }}.azurecr.io
-        username: ${{ inputs.REGISTRY_USERNAME }}
-        password: ${{ inputs.REGISTRY_PASSWORD }}
+        registry: ${{ inputs.ACR_NAME }}.azurecr.io
+        username: ${{ inputs.ACR_USERNAME }}
+        password: ${{ inputs.ACR_PASSWORD }}
     
     - name: Set Oryx++ Builder as default builder
       shell: bash
@@ -69,12 +69,12 @@ runs:
     
     - name: Create runnable application image
       shell: bash
-      run: pack build ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --path ${{ inputs.appSourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ inputs.runtimeName }}:${{ inputs.runtimeVersion }}
+      run: pack build ${{ inputs.ACR_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --path ${{ inputs.appSourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ inputs.runtimeName }}:${{ inputs.runtimeVersion }}
 
     - name: Push image to Azure Container Registry
       shell: bash
-      run: docker push ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }}
+      run: docker push ${{ inputs.ACR_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }}
     
     - name: Create or update Azure Container App
       shell: bash
-      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ inputs.resourceGroup }} --image ${{ inputs.REGISTRY_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.REGISTRY_NAME }}.azurecr.io --registry-username ${{ inputs.REGISTRY_USERNAME }} --registry-password ${{ inputs.REGISTRY_PASSWORD }}
+      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ inputs.resourceGroup }} --image ${{ inputs.ACR_NAME }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.ACR_NAME }}.azurecr.io --registry-username ${{ inputs.ACR_USERNAME }} --registry-password ${{ inputs.ACR_PASSWORD }}
