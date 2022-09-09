@@ -84,9 +84,7 @@ runs:
       if: ${{ inputs.targetPort == '' }}
       shell: bash
       run: |
-        if [ ${{ env.RUNTIME_STACK }} = python:* ]; then TARGET_PORT="80"; else TARGET_PORT="8080"; fi
-        echo "TARGET_PORT=$(TARGET_PORT)" >> $GITHUB_ENV
-        
+        if [ ${{ env.RUNTIME_STACK }} = python:* ]; then echo "TARGET_PORT=80" >> $GITHUB_ENV; else echo "TARGET_PORT=8080" >> $GITHUB_ENV; fi
     
     - name: Set Oryx++ Builder as default builder
       shell: bash
@@ -102,4 +100,4 @@ runs:
     
     - name: Create or update Azure Container App
       shell: bash
-      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ inputs.resourceGroup }} --image ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ inputs.targetPort }} --registry-server ${{ inputs.acrName }}.azurecr.io --registry-username ${{ inputs.acrUsername }} --registry-password ${{ inputs.acrPassword }}
+      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ inputs.resourceGroup }} --image ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ env.TARGET_PORT }} --registry-server ${{ inputs.acrName }}.azurecr.io --registry-username ${{ inputs.acrUsername }} --registry-password ${{ inputs.acrPassword }}
