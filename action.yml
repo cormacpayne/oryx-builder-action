@@ -26,7 +26,6 @@ inputs:
   resourceGroup:
     description: 'The resource group that the Azure Container App will be created in. By default, this value will be <container-app-name>-rg'
     required: false
-    default: '${{ inputs.containerAppName }}-rg'
   runtimeStack:
     description: |
       "The platform version stack that the application runs in when deployed to the Azure Container App. This should
@@ -60,6 +59,19 @@ runs:
         registry: ${{ inputs.acrName }}.azurecr.io
         username: ${{ inputs.acrUsername }}
         password: ${{ inputs.acrPassword }}
+    
+    - name: Export resource group to environment variable
+      shell: bash
+      run: |
+        RESOURCE_GROUP="${{ inputs.resourceGroup }}"
+        echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
+    
+    - name: Determine resource group if not provided
+      if: ${{ inputs.resourceGroup == '' }}
+      shell: bash
+      run: |
+        RESOURCE_GROUP="${{ inputs.containerAppName }}-rg"
+        echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
     
     - name: Export runtime stack to environment variable
       shell: bash
@@ -102,4 +114,4 @@ runs:
     
     - name: Create or update Azure Container App
       shell: bash
-      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ inputs.resourceGroup }} --image ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ env.TARGET_PORT }} --registry-server ${{ inputs.acrName }}.azurecr.io --registry-username ${{ inputs.acrUsername }} --registry-password ${{ inputs.acrPassword }}
+      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ env.RESOURCE_GROUP }} --image ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ env.TARGET_PORT }} --registry-server ${{ inputs.acrName }}.azurecr.io --registry-username ${{ inputs.acrUsername }} --registry-password ${{ inputs.acrPassword }}
