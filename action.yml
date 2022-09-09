@@ -18,13 +18,15 @@ inputs:
     description: 'Password used to authenticate push to Azure Container Registry'
     required: true
   containerAppName:
-    description: 'The name of the Azure Container App that will be created or updated. By default, this value is oryx-builder-<random-string>.'
+    description: |
+      "The name of the Azure Container App that will be created or updated. By default, this value will be
+      oryx-builder-<github-run-id>-<github-run-attempt>."
     required: false
     default: 'oryx-builder-${{ github.run_id }}-${{ github.run_attempt }}'
   resourceGroup:
-    description: 'The resource group that the Azure Container App will be created in. By default, this value is oryx-builder-rg'
+    description: 'The resource group that the Azure Container App will be created in. By default, this value will be <container-app-name>-rg'
     required: false
-    default: 'oryx-builder-rg'
+    default: '${{ inputs.containerAppName }}-rg'
   runtimeStack:
     description: |
       "The platform version stack that the application runs in when deployed to the Azure Container App. This should
