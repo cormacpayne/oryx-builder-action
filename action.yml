@@ -26,6 +26,11 @@ inputs:
   resourceGroup:
     description: 'The resource group that the Azure Container App will be created in. By default, this value will be <container-app-name>-rg'
     required: false
+  containerAppEnvironment:
+    description: |
+      'The name of the Azure Container App environment to use with the application. By default, if an environment already exists in the given
+      resource group, it will be used, otherwise, an environment will be created in the format <container-app-name>-env'
+    required: false
   runtimeStack:
     description: |
       "The platform version stack that the application runs in when deployed to the Azure Container App. This should
@@ -73,6 +78,13 @@ runs:
         RESOURCE_GROUP="${{ inputs.containerAppName }}-rg"
         echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
     
+    - name: Export environment to environment variable
+      if: ${{ inputs.containerAppEnvironment != '' }}
+      shell: bash
+      run: |
+        CONTAINER_APP_ENVIRONMENT_ARG="--environment ${{ inputs.containerAppEnvironment }}"
+        echo "CONTAINER_APP_ENVIRONMENT_ARG=${CONTAINER_APP_ENVIRONMENT_ARG}" >> $GITHUB_ENV        
+    
     - name: Export runtime stack to environment variable
       shell: bash
       run: |
@@ -114,4 +126,4 @@ runs:
     
     - name: Create or update Azure Container App
       shell: bash
-      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ env.RESOURCE_GROUP }} --image ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ env.TARGET_PORT }} --registry-server ${{ inputs.acrName }}.azurecr.io --registry-username ${{ inputs.acrUsername }} --registry-password ${{ inputs.acrPassword }}
+      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ env.RESOURCE_GROUP }} ${{ env.CONTAINER_APP_ENVIRONMENT_ARG }} --image ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --target-port ${{ env.TARGET_PORT }} --registry-server ${{ inputs.acrName }}.azurecr.io --registry-username ${{ inputs.acrUsername }} --registry-password ${{ inputs.acrPassword }}
