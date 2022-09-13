@@ -49,6 +49,10 @@ runs:
       shell: bash
       run: (curl -sSL "https://github.com/buildpacks/pack/releases/download/v0.27.0/pack-v0.27.0-linux.tgz" | sudo tar -C /usr/local/bin/ --no-same-owner -xzv pack)
 
+    - name: Install containerapp extension for Azure CLI
+      shell: bash
+      run: az extension add --name containerapp
+
     - name: Log in to Azure
       uses: azure/login@v1
       with:
@@ -112,14 +116,9 @@ runs:
       shell: bash
       run: pack config default-builder cormtestacr.azurecr.io/builder:latest
     
-    - name: Create runnable application image and install Azure CLI Container Apps extension
+    - name: Create runnable application image
       shell: bash
-      run: |
-        pack build ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --path ${{ inputs.appSourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ env.RUNTIME_STACK }} &
-        P1=$!
-        az extension add --name containerapp &
-        P2=$!
-        wait $P1 $P2
+      run: pack build ${{ inputs.acrName }}.azurecr.io/oryx-builder/app:${{ github.run_id }}.${{ github.run_attempt }} --path ${{ inputs.appSourcePath }} --builder cormtestacr.azurecr.io/builder:latest --run-image cormtestacr.azurecr.io/builder/stack/${{ env.RUNTIME_STACK }}
 
     - name: Push image to Azure Container Registry
       shell: bash
