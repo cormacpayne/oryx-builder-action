@@ -150,6 +150,7 @@ runs:
     - name: Update name of image to deploy if not provided
       if: ${{ inputs.imageToDeploy == '' }}
       shell: bash
+      run: |
         IMAGE_TO_DEPLOY="${{ env.IMAGE_TO_BUILD }}"
         echo "IMAGE_TO_DEPLOY=${IMAGE_TO_DEPLOY}" >> $GITHUB_ENV
 
