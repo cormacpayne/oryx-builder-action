@@ -111,7 +111,7 @@ runs:
       if: ${{ inputs.acrUsername == '' || inputs.acrPassword == '' }}
       shell: bash
       run: |
-        ACR_ACCESS_TOKEN=$(az acr login --expose-token | jq -r '.accessToken')
+        ACR_ACCESS_TOKEN=$(az acr login --name ${{ inputs.acrName }} --expose-token | jq -r '.accessToken')
         echo "ACR_ACCESS_TOKEN=${ACR_ACCESS_TOKEN}" >> $GITHUB_ENV
         docker login ${{ inputs.acrName }}.azurecr.io -u 00000000-0000-0000-0000-000000000000 -p $ACCESS_TOKEN
 
