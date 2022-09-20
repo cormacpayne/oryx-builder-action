@@ -10,10 +10,14 @@ inputs:
     description: 'The name of the Azure Container Registry that the runnable application image will be pushed to.'
     required: true
   acrUsername:
-    description: 'The username used to authenticate push requests to the provided Azure Container Registry.'
+    description: |
+      'The username used to authenticate push requests to the provided Azure Container Registry. If not provided, an
+      access token will be generated via "az acr login" and provided to "docker login" to authenticate the requests.'
     required: false
   acrPassword:
-    description: 'The password used to authenticate push requests to the provided Azure Container Registry.'
+    description: |
+      'The password used to authenticate push requests to the provided Azure Container Registry. If not provided, an
+      access token will be generated via "az acr login" and provided to "docker login" to authenticate the requests.'
     required: false
   azureCredentials:
     description: |
@@ -90,11 +94,27 @@ runs:
     
     - name: Log in to Azure Container Registry
       uses: docker/login-action@v2.0.0
+      if: ${{ inputs.acrUsername != '' && inputs.acrPassword != '' }}
       with:
         registry: ${{ inputs.acrName }}.azurecr.io
         username: ${{ inputs.acrUsername }}
         password: ${{ inputs.acrPassword }}
+
+    - name: Export Azure Container Registry information to environment variable for Azure CLI command
+      if: ${{ inputs.acrUsername != '' && inputs.acrPassword != '' }}
+      shell: bash
+      run: |
+        ACR_LOGIN_ARG="--registry-server ${{ inputs.acrName }}.azurecr.io --registry-username ${{ inputs.acrUsername }} --registry-password ${{ inputs.acrPassword }}"
+        echo "ACR_LOGIN_ARG=${ACR_LOGIN_ARG}" >> $GITHUB_ENV
     
+    - name: Get access token to log in to Azure Container Registry
+      if: ${{ inputs.acrUsername == '' || inputs.acrPassword == '' }}
+      shell: bash
+      run: |
+        ACR_ACCESS_TOKEN=$(az acr login --expose-token | jq -r '.accessToken')
+        echo "ACR_ACCESS_TOKEN=${ACR_ACCESS_TOKEN}" >> $GITHUB_ENV
+        docker login ${{ inputs.acrName }}.azurecr.io -u 00000000-0000-0000-0000-000000000000 -p $ACCESS_TOKEN
+
     - name: Export Dockerfile path to environment variable
       shell: bash
       run: |
@@ -202,4 +222,5 @@ runs:
     
     - name: Create or update Azure Container App
       shell: bash
-      run: az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ env.RESOURCE_GROUP }} ${{ env.CONTAINER_APP_ENVIRONMENT_ARG }} --image ${{ env.IMAGE_TO_DEPLOY }} --target-port ${{ env.TARGET_PORT }} --registry-server ${{ inputs.acrName }}.azurecr.io --registry-username ${{ inputs.acrUsername }} --registry-password ${{ inputs.acrPassword }}
+      run: |
+        az containerapp up --name ${{ inputs.containerAppName }} --resource-group ${{ env.RESOURCE_GROUP }} --image ${{ env.IMAGE_TO_DEPLOY }} --target-port ${{ env.TARGET_PORT }} ${{ env.CONTAINER_APP_ENVIRONMENT_ARG }} ${{ env.ACR_LOGIN_ARG }}
