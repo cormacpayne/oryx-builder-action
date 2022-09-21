@@ -113,7 +113,7 @@ runs:
       run: |
         ACR_ACCESS_TOKEN=$(az acr login --name ${{ inputs.acrName }} --expose-token | jq -r '.accessToken')
         echo "ACR_ACCESS_TOKEN=${ACR_ACCESS_TOKEN}" >> $GITHUB_ENV
-        docker login ${{ inputs.acrName }}.azurecr.io -u 00000000-0000-0000-0000-000000000000 -p $ACCESS_TOKEN
+        docker login ${{ inputs.acrName }}.azurecr.io -u 00000000-0000-0000-0000-000000000000 -p $ACR_ACCESS_TOKEN
 
     - name: Export Dockerfile path to environment variable
       shell: bash
